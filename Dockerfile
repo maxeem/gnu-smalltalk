@@ -20,7 +20,9 @@ RUN dnf update -y && \
     texinfo \
     vim \
     gtk2-devel \
-    sqlite-devel
+    sqlite-devel \
+    SDL-devel SDL-static SDL_gfx SDL_gfx-devel SDL_image SDL_image-devel \
+    SDL_net SDL_net-devel SDL_sound SDL_sound-devel SDL_ttf SDL_ttf-devel
 
 # Clone the GNU Smalltalk repository
 RUN git clone https://github.com/maxeem/gnu-smalltalk.git
