@@ -18,7 +18,9 @@ RUN dnf update -y && \
     automake \
     libtool-ltdl-devel \
     texinfo \
-    vim
+    vim \
+    gtk2-devel \
+    sqlite-devel
 
 # Clone the GNU Smalltalk repository
 RUN git clone https://github.com/maxeem/gnu-smalltalk.git
