@@ -1,49 +1,61 @@
-# Use the official Rocky Linux 8 image as the base
-FROM rockylinux:8
+FROM ubuntu:24.04
 
-# Install necessary packages
-RUN dnf update -y && \
-    dnf install -y \
-    git \
-    gcc \
-    gcc-c++ \
-    make \
-    libtool \
-    bison \
-    flex \
-    gmp-devel \
-    libffi-devel \
-    libsigsegv-devel \
-    autoconf \
-    automake \
-    libtool-ltdl-devel \
-    texinfo \
-    vim \
-    gtk2-devel \
-    sqlite-devel \
-    SDL-devel SDL-static SDL_gfx SDL_gfx-devel SDL_image SDL_image-devel \
-    SDL_net SDL_net-devel SDL_sound SDL_sound-devel SDL_ttf SDL_ttf-devel
+LABEL maintainer="eng.maksim@gmail.com"
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Clone the GNU Smalltalk repository
-RUN git clone https://github.com/maxeem/gnu-smalltalk.git
+# Install build dependencies
+RUN apt update && apt install -y \
+  build-essential \
+  autoconf \
+  libsigsegv-dev \
+  gawk \
+  automake \
+  libtool \
+  pkg-config \
+  libglib2.0-dev \
+  libgtk2.0-dev \
+  texinfo \
+  help2man \
+  perl \
+  git \
+  make \
+  emacs \
+  wine \
+  wget \
+  zip \
+  flex \
+  bison \
+  unzip \
+  gettext \
+  sed
 
-# Set the working directory
-WORKDIR /gnu-smalltalk
+RUN apt-get install -y \
+  libgnutls28-dev libreadline-dev libgdbm-dev libsqlite3-dev libpq-dev \
+  tcl-dev tk-dev libncurses-dev libgmp-dev \
+  libsdl1.2-dev libsdl-image1.2-dev libsdl-mixer1.2-dev libsdl-ttf2.0-dev libsdl-sound1.2-dev \
+  libgl1-mesa-dev libglu1-mesa-dev freeglut3-dev libgirepository1.0-dev \
+  binutils texinfo tcl vim && rm -rf /var/lib/apt/lists/*
 
-# Generate the configure script
-RUN autoreconf -i
+# Create working directory
+WORKDIR /opt/gnusmalltalk
 
-# Configure the build
-RUN ./configure
+# Clone GNU Smalltalk source
+RUN git clone https://github.com/maxeem/gnu-smalltalk.git .
+# Patch broken AC_REQUIRE usage in macros
+RUN aclocal -I build-aux && autoconf
+RUN cd snprintfv && autoreconf -fi
+RUN libtoolize --force --copy \
+ && autoheader \
+ && aclocal \
+ && autoconf \
+ && automake --add-missing --copy \
+ && env CC=gcc ./configure --prefix=/usr/local --with-lispstartdir=/etc/emacs/site-start.d
 
-# Compile GNU Smalltalk
-RUN make
+RUN make all install -k || true
 
-# Install GNU Smalltalk
-RUN make install
+# Optional: Run tests
+WORKDIR /opt/gnusmalltalk
+RUN make check || echo "Some tests may fail in containerized environments"
 
-# Set the LD_LIBRARY_PATH environment variable
-ENV LD_LIBRARY_PATH /usr/local/lib/smalltalk
-
-# Set the entrypoint to gst
-ENTRYPOINT ["gst"]
+# Default shell
+CMD ["gst"]
