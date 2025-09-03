@@ -1,32 +1,26 @@
 #!/bin/bash
-# Maksim A.
-set -e
-
-# Usage: ./run-smalltalk-in-docker.sh myscript.st
-# Assumes your Docker image is named: gnu-smalltalk:latest
 
 SCRIPT="$1"
 
 if [ -z "$SCRIPT" ]; then
-  echo "Usage: $0 <smalltalk-script.st>"
+  echo "❌ Please provide a Smalltalk script filename or full path"
   exit 1
 fi
 
-# If no extension is given, assume .st
-if [[ "$SCRIPT" != *.st ]]; then
-  SCRIPT="${SCRIPT}.st"
-fi
+# Resolve full path and relative path
+FULL_PATH="$(realpath "$SCRIPT")"
+SCRIPT_NAME="$(basename "$FULL_PATH")"
+SCRIPT_DIR="$(dirname "$FULL_PATH")"
+SCRIPT_RELATIVE="${FULL_PATH#$SCRIPT_DIR/}"  # This will just be $SCRIPT_NAME
 
-# If not a full path, assume current directory
-if [ ! -f "$SCRIPT" ]; then
-  if [ -f "./$SCRIPT" ]; then
-    SCRIPT="./$SCRIPT"
-  else
-    echo "❌ File not found: $SCRIPT"
-    exit 1
-  fi
-fi
+echo "🚀 Running $SCRIPT_NAME from $SCRIPT_DIR in a one-time Docker container..."
 
-echo "🚀 Running $SCRIPT in a one-time Docker container..."
-
-docker run --rm -v "$(pwd):/scripts" abuajamieh/gnu-smalltalk:latest gst "/scripts/$(basename "$SCRIPT")"
+docker run --rm \
+  -v "$SCRIPT_DIR:/scripts" \
+  abuajamieh/gnu-smalltalk \
+  bash -c "
+    Xvfb :99 -screen 0 1024x768x16 2>/dev/null &
+    export DISPLAY=:99
+    sleep 1
+    gst /scripts/$SCRIPT_NAME
+  "
