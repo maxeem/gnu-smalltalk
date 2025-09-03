@@ -57,5 +57,8 @@ RUN make all install -k || true
 WORKDIR /opt/gnusmalltalk
 RUN make check || echo "Some tests may fail in containerized environments"
 
+# Add GUI remoting Support 
+RUN apt install -y xvfb tk
+
 # Default shell
 CMD ["gst"]
