@@ -57,9 +57,12 @@ Animal setAnimalNumber: 1.
 dog setName: 'Lyka'.
 dog getName printNl.
 dog makeNoise.
+Animal getAnimalNumber printNl.
 
 cat := Cat new.
 Animal setAnimalNumber: 2.
 cat setName: 'Tom'.
 cat getName printNl.
 cat makeNoise.
+Animal getAnimalNumber printNl.
+
